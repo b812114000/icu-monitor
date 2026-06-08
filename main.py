@@ -1,10 +1,16 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import time
 
+st.set_page_config(page_title="第10組 ICU 臨床單床監護儀", page_icon="🏥", layout="wide")
 
-st.set_page_config(page_title="第10組 ICU 臨床單床監護儀 ", page_icon="🏥", layout="wide")
-
+st.logo("🏥") 
+if "load_time" not in st.session_state:
+    st.session_state.load_time = time.time()
+time.sleep(0.1)
+st.rerun() if (time.time() - st.session_state.load_time) > 3 else None
+st.session_state.load_time = time.time()
 
 st.markdown("""
     <style>
@@ -42,7 +48,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 st.markdown("""
     <div style="background-color: #0F131A; padding: 15px 25px; border-radius: 8px; border: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
         <div>
@@ -56,15 +61,9 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-
 sheet_url = "https://docs.google.com/spreadsheets/d/1sBJR8rompMp7PwcGHBaXWmjeEUHjdMHc3GokhqJCTtE/edit?gid=0#gid=0"
 
-
 try:
-    if sheet_url == "貼上網址":
-        raise ValueError("尚未設定網址")
-
-
     csv_url = sheet_url.split('/edit')[0] + '/export?format=csv'
     df = pd.read_csv(csv_url)
 
@@ -79,24 +78,11 @@ try:
     chart_data = df.set_index('Timestamp')[['Systolic', 'Diastolic', 'SpO2', 'HeartRate']]
     error_mode = False
 except Exception as e:
-
     error_mode = True
-    st.sidebar.markdown("<h3 style='color: #38BDF8; margin-top:0;'>🧪 現場 Live 展示控制</h3>", unsafe_allow_html=True)
-    demo_bpm = st.sidebar.slider("模擬目前心率 (BPM)", 40, 140, 72)
-    demo_spo2 = st.sidebar.slider("模擬目前血氧 (%)", 85, 100, 98)
-
-    current_sys, current_dia, current_spo2, current_hr = 120, 80, demo_spo2, demo_bpm
+    current_sys, current_dia, current_spo2, current_hr = 120, 80, 98, 72
     colab_alert = "NORMAL"
-    if demo_bpm < 50:
-        colab_alert = "EMERGENCY_LOW_HR"
-    elif demo_bpm > 120:
-        colab_alert = "EMERGENCY_HIGH_HR"
-    elif demo_spo2 < 94:
-        colab_alert = "EMERGENCY_LOW_SPO2"
-
     chart_data = pd.DataFrame()
 
-# --- 臨床邏輯判斷 ---
 diagnostic_status = "臨床徵象穩定"
 is_critical = False
 status_color = "#10B981"
@@ -115,56 +101,8 @@ if colab_alert != "NORMAL":
 
 card_style = "status-critical" if is_critical else "status-stable"
 
-# --- 主畫面：單床監控大面板 ---
 st.markdown(f"""
     <div class="monitor-panel {card_style}">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <span style="font-size: 28px; font-weight: 800; color: #FFF; letter-spacing: 1px;">🛏️ TARGET LOCATION: BED-001</span>
-            <span style="background-color: {status_color}22; border: 2px solid {status_color}; padding: 6px 16px; border-radius: 6px; font-size: 16px; color: {status_color}; font-weight: bold; letter-spacing: 1px;">
-                {diagnostic_status}
-            </span>
-        </div>
-        <p style="color: #64748B; font-size: 13px; margin: -10px 0 20px 0;">數據來源認證：第10組 雲端模擬監護儀 ｜ 實時狀態</p>
-        <hr style="border: 0; border-top: 1px solid #1E293B; margin: 15px 0 25px 0;">
-    </div>
-""", unsafe_allow_html=True)
-
-if error_mode:
-    st.info("💡 貼心提示：目前為 Demo 模式。請確認 Google Sheet 是否已開啟『知道連結的任何人都可以檢視』共用權限！")
-
-m1, m2, m3 = st.columns(3)
-
-with m1:
-    bp_alert = "text-alert" if colab_alert == "EMERGENCY_HIGH_BP" else "text-bp"
-    st.markdown(f"""
-        <div style="background-color: #06090E; padding: 25px; border-radius: 8px; border: 1px solid #1E293B; text-align: center;">
-            <div style="font-size: 14px; color: #64748B; font-weight: bold; letter-spacing: 1px;">NIBP (即時血壓)</div>
-            <div class="vital-value {bp_alert}">{current_sys}/{current_dia} <span style="font-size:16px; font-weight:normal;">mmHg</span></div>
-            <div style="font-size: 11px; color: #64748B; margin-top: 10px;">收縮壓/舒張壓</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with m2:
-    spo2_alert = "text-alert" if colab_alert == "EMERGENCY_LOW_SPO2" else "text-spo2"
-    st.markdown(f"""
-        <div style="background-color: #06090E; padding: 25px; border-radius: 8px; border: 1px solid #1E293B; text-align: center;">
-            <div style="font-size: 14px; color: #64748B; font-weight: bold; letter-spacing: 1px;">SpO2 (即時血氧)</div>
-            <div class="vital-value {spo2_alert}">{current_spo2} <span style="font-size:16px; font-weight:normal;">%</span></div>
-            <div style="font-size: 11px; color: #64748B; margin-top: 10px;">正常範圍: &ge; 94 %</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-with m3:
-    hr_alert = "text-alert" if (colab_alert in ["EMERGENCY_HIGH_HR", "EMERGENCY_LOW_HR"]) else "text-bpm"
-    st.markdown(f"""
-        <div style="background-color: #06090E; padding: 25px; border-radius: 8px; border: 1px solid #1E293B; text-align: center;">
-            <div style="font-size: 14px; color: #64748B; font-weight: bold; letter-spacing: 1px;">HR (即時心率)</div>
-            <div class="vital-value {hr_alert}">{current_hr} <span style="font-size:16px; font-weight:normal;">BPM</span></div>
-            <div style="font-size: 11px; color: #64748B; margin-top: 10px;">正常範圍: 50 ~ 120 BPM</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-if not error_mode and not chart_data.empty:
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #38BDF8; font-size: 18px; font-weight: 700;'>📈 多生理徵象連續採樣趨勢 (Clinical Waveforms)</h3>", unsafe_allow_html=True)
-    st.line_chart(chart_data.tail(30), height=280)
+            <span style="background-color: {status_color}22; border: 2px solid {status_color}; padding: 6px 16px; border-radius: 6px; font-size: 16px; color: {status_color}; font-weight: bold; letter-spacing: 1
