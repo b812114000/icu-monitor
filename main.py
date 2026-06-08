@@ -3,13 +3,10 @@ import pandas as pd
 from datetime import datetime
 import time
 
-# 1. 必須先安裝：pip install streamlit-autorefresh
-from streamlit_autorefresh import st_autorefresh
-
 st.set_page_config(page_title="第10組 ICU 臨床單床監護儀", page_icon="🏥", layout="wide")
 
-# 2. 正確的解法：在最頂端放上自動刷新器，每 3 秒自動低調重整，絕不中斷代碼執行
-st_autorefresh(interval=3000, limit=None, key="icu_monitor_refresh")
+# 【核心大絕招】直接命令網頁瀏覽器每 3 秒自動按一次 F5 重新整理
+st.markdown('<meta http-equiv="refresh" content="3">', unsafe_allow_html=True)
 
 st.logo("🏥") 
 
@@ -66,7 +63,7 @@ sheet_url = "https://docs.google.com/spreadsheets/d/1sBJR8rompMp7PwcGHBaXWmjeEUH
 
 try:
     csv_url = sheet_url.split('/edit')[0] + '/export?format=csv'
-    # 加上隨機時間戳記破除快取，逼迫每一輪都去雲端下載最新一筆
+    # 網址強行加上不可預測的時間戳記，絕對破除試算表所有的快取快取機制
     df = pd.read_csv(f"{csv_url}&nocache={time.time()}")
     latest_row = df.iloc[-1]
     current_sys = int(latest_row['Systolic'])
