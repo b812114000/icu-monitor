@@ -5,8 +5,24 @@ import time
 
 st.set_page_config(page_title="第10組 ICU 臨床單床監護儀", page_icon="🏥", layout="wide")
 
-# 【核心大絕招】直接命令網頁瀏覽器每 3 秒自動按一次 F5 重新整理
-st.markdown('<meta http-equiv="refresh" content="3">', unsafe_allow_html=True)
+# =================【無敵大絕招：前端 JavaScript 實時點擊驅動器】=================
+# 這段代碼會在網頁最底層埋入一個真正的 JS 定時器，每 3 秒強迫瀏覽器重新執行，繞過所有 Python 限制
+st.components.v1.html(
+    """
+    <script>
+        const interval = setInterval(function() {
+            // 尋找 Streamlit 頁面上的任何按鈕或觸發 Rerun 的核心節點
+            const windowParent = window.parent;
+            if (windowParent) {
+                // 強制讓前端向後端發送 Rerun 訊號
+                windowParent.postMessage({type: 'streamlit:rerun'}, '*');
+            }
+        }, 3000); // 3000 毫秒 = 3 秒
+    </script>
+    """,
+    height=0,
+)
+# =========================================================================
 
 st.logo("🏥") 
 
@@ -63,7 +79,7 @@ sheet_url = "https://docs.google.com/spreadsheets/d/1sBJR8rompMp7PwcGHBaXWmjeEUH
 
 try:
     csv_url = sheet_url.split('/edit')[0] + '/export?format=csv'
-    # 網址強行加上不可預測的時間戳記，絕對破除試算表所有的快取快取機制
+    # 網址後面強行加上亂數時間戳記，徹底摧毀 Google Sheets 的快取硬碟
     df = pd.read_csv(f"{csv_url}&nocache={time.time()}")
     latest_row = df.iloc[-1]
     current_sys = int(latest_row['Systolic'])
