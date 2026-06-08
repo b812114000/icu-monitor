@@ -60,8 +60,7 @@ sheet_url = "https://docs.google.com/spreadsheets/d/1sBJR8rompMp7PwcGHBaXWmjeEUH
 
 try:
     csv_url = sheet_url.split('/edit')[0] + '/export?format=csv'
-    df = pd.read_csv(csv_url)
-
+    df = pd.read_csv(f"{csv_url}&timestamp={time.time()}")
     latest_row = df.iloc[-1]
     current_sys = int(latest_row['Systolic'])
     current_dia = int(latest_row['Diastolic'])
