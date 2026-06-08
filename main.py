@@ -52,7 +52,7 @@ st.markdown("""
     <div style="background-color: #0F131A; padding: 15px 25px; border-radius: 8px; border: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
         <div>
             <h1 style="color: #38BDF8; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px;">🏥 CLINICAL PATIENT MONITOR</h1>
-            <p style="color: #64748B; margin: 3px 0 0 0; font-size: 13px;">第 10 組 醫療數據中央監控台 | 實時數據接收端 (Active)</p>
+            <p style="color: #64748B; margin: 3px 0 0 0; font-size: 13px;">第 10 組 醫療數據中央监控台 | 實時數據接收端 (Active)</p>
         </div>
         <div style="text-align: right;">
             <span style="background-color: #1E293B; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #34D399; font-weight: bold;">● LIVE LINK</span>
@@ -105,4 +105,27 @@ st.markdown(f"""
     <div class="monitor-panel {card_style}">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <span style="font-size: 28px; font-weight: 800; color: #FFF; letter-spacing: 1px;">🛏️ TARGET LOCATION: BED-001</span>
-            <span style="background-color: {status_color}22; border: 2px solid {status_color}; padding: 6px 16px; border-radius: 6px; font-size: 16px; color: {status_color}; font-weight: bold; letter-spacing: 1
+            <span style="background-color: {status_color}22; border: 2px solid {status_color}; padding: 6px 16px; border-radius: 6px; font-size: 16px; color: {status_color}; font-weight: bold; letter-spacing: 1px;">
+                {diagnostic_status}
+            </span>
+        </div>
+        <p style="color: #64748B; font-size: 13px; margin: -10px 0 20px 0;">數據來源認證：第10組 雲端模擬監護儀 ｜ 實時狀態</p>
+        <hr style="border: 0; border-top: 1px solid #1E293B; margin: 15px 0 25px 0;">
+    </div>
+""", unsafe_allow_html=True)
+
+m1, m2, m3 = st.columns(3)
+
+with m1:
+    bp_alert = "text-alert" if colab_alert == "EMERGENCY_HIGH_BP" else "text-bp"
+    st.markdown(f"""
+        <div style="background-color: #06090E; padding: 25px; border-radius: 8px; border: 1px solid #1E293B; text-align: center;">
+            <div style="font-size: 14px; color: #64748B; font-weight: bold; letter-spacing: 1px;">NIBP (即時血壓)</div>
+            <div class="vital-value {bp_alert}">{current_sys}/{current_dia} <span style="font-size:16px; font-weight:normal;">mmHg</span></div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with m2:
+    spo2_alert = "text-alert" if colab_alert == "EMERGENCY_LOW_SPO2" else "text-spo2"
+    st.markdown(f"""
+        <div style="background-color
