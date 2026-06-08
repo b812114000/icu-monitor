@@ -52,7 +52,7 @@ st.markdown("""
     <div style="background-color: #0F131A; padding: 15px 25px; border-radius: 8px; border: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
         <div>
             <h1 style="color: #38BDF8; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px;">🏥 CLINICAL PATIENT MONITOR</h1>
-            <p style="color: #64748B; margin: 3px 0 0 0; font-size: 13px;">第 10 組 醫療數據中央监控台 | 實時數據接收端 (Active)</p>
+            <p style="color: #64748B; margin: 3px 0 0 0; font-size: 13px;">第 10 組 醫療數據中央監控台 | 實時數據接收端 (Active)</p>
         </div>
         <div style="text-align: right;">
             <span style="background-color: #1E293B; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #34D399; font-weight: bold;">● LIVE LINK</span>
@@ -101,31 +101,53 @@ if colab_alert != "NORMAL":
 
 card_style = "status-critical" if is_critical else "status-stable"
 
-st.markdown(f"""
-    <div class="monitor-panel {card_style}">
+panel_html = """
+    <div class="monitor-panel {c_style}">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <span style="font-size: 28px; font-weight: 800; color: #FFF; letter-spacing: 1px;">🛏️ TARGET LOCATION: BED-001</span>
-            <span style="background-color: {status_color}22; border: 2px solid {status_color}; padding: 6px 16px; border-radius: 6px; font-size: 16px; color: {status_color}; font-weight: bold; letter-spacing: 1px;">
-                {diagnostic_status}
+            <span style="background-color: {s_color}22; border: 2px solid {s_color}; padding: 6px 16px; border-radius: 6px; font-size: 16px; color: {s_color}; font-weight: bold; letter-spacing: 1px;">
+                {d_status}
             </span>
         </div>
         <p style="color: #64748B; font-size: 13px; margin: -10px 0 20px 0;">數據來源認證：第10組 雲端模擬監護儀 ｜ 實時狀態</p>
         <hr style="border: 0; border-top: 1px solid #1E293B; margin: 15px 0 25px 0;">
     </div>
-""", unsafe_allow_html=True)
+""".format(c_style=card_style, s_color=status_color, d_status=diagnostic_status)
+
+st.markdown(panel_html, unsafe_allow_html=True)
 
 m1, m2, m3 = st.columns(3)
 
 with m1:
     bp_alert = "text-alert" if colab_alert == "EMERGENCY_HIGH_BP" else "text-bp"
-    st.markdown(f"""
+    bp_html = """
         <div style="background-color: #06090E; padding: 25px; border-radius: 8px; border: 1px solid #1E293B; text-align: center;">
             <div style="font-size: 14px; color: #64748B; font-weight: bold; letter-spacing: 1px;">NIBP (即時血壓)</div>
-            <div class="vital-value {bp_alert}">{current_sys}/{current_dia} <span style="font-size:16px; font-weight:normal;">mmHg</span></div>
+            <div class="vital-value {b_alert}">{sys}/{dia} <span style="font-size:16px; font-weight:normal;">mmHg</span></div>
         </div>
-    """, unsafe_allow_html=True)
+    """.format(b_alert=bp_alert, sys=current_sys, dia=current_dia)
+    st.markdown(bp_html, unsafe_allow_html=True)
 
 with m2:
     spo2_alert = "text-alert" if colab_alert == "EMERGENCY_LOW_SPO2" else "text-spo2"
-    st.markdown(f"""
-        <div style="background-color
+    spo2_html = """
+        <div style="background-color: #06090E; padding: 25px; border-radius: 8px; border: 1px solid #1E293B; text-align: center;">
+            <div style="font-size: 14px; color: #64748B; font-weight: bold; letter-spacing: 1px;">SpO2 (即時血氧)</div>
+            <div class="vital-value {s_alert}">{spo2} <span style="font-size:16px; font-weight:normal;">%</span></div>
+        </div>
+    """.format(s_alert=spo2_alert, spo2=current_spo2)
+    st.markdown(spo2_html, unsafe_allow_html=True)
+
+with m3:
+    hr_alert = "text-alert" if (colab_alert in ["EMERGENCY_HIGH_HR", "EMERGENCY_LOW_HR"]) else "text-bpm"
+    hr_html = """
+        <div style="background-color: #06090E; padding: 25px; border-radius: 8px; border: 1px solid #1E293B; text-align: center;">
+            <div style="font-size: 14px; color: #64748B; font-weight: bold; letter-spacing: 1px;">HR (即時心率)</div>
+            <div class="vital-value {h_alert}">{hr} <span style="font-size:16px; font-weight:normal;">BPM</span></div>
+        </div>
+    """.format(h_alert=hr_alert, hr=current_hr)
+    st.markdown(hr_html, unsafe_allow_html=True)
+
+if not error_mode and not chart_data.empty:
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.line_chart(chart_data.tail(30), height=280)
