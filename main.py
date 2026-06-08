@@ -146,11 +146,7 @@ if not error_mode and not chart_data.empty:
     st.markdown("<br>", unsafe_allow_html=True)
     st.line_chart(chart_data.tail(30), height=280, key=f"line_chart_{datetime.now().timestamp()}")
 
-if "last_refresh_time" not in st.session_state:
-    st.session_state.last_refresh_time = time.time()
-
-time.sleep(0.1)
-
-if (time.time() - st.session_state.last_refresh_time) > 3:
-    st.session_state.last_refresh_time = time.time()
-    st.rerun()
+# 讓程式在最底部卡住、不斷盯著時間看，滿 3 秒就強制重整網頁
+while True:
+    time.sleep(1)  # 每隔 1 秒檢查一次，完全不佔 CPU 效能
+    st.rerun()     # 只要時間到了這一步，直接強制重整，重新回第一行抓資料！
