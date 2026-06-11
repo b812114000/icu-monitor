@@ -87,7 +87,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 4. 資料獲取與解析 (強力摧毀 Google Sheets 的快取機制)
-sheet_url = "https://docs.google.com/spreadsheets/d/1sBJR8rompMp7PwcGHBaXWmjeEUHjdMHc3GokhqJCTtE/edit?gid=0#gid=0"
+sheet_url = "https://docs.google.com/spreadsheets/d/1pg-uFGYgdBANJOnRxqiRo64IhgYH4FDuZPlmOFYFHpU/edit?hl=zh-tw&gid=0#gid=0"
 
 try:
     csv_url = sheet_url.split('/edit')[0] + '/export?format=csv'
