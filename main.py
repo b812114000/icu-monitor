@@ -2,122 +2,122 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import time
+import random
 
-# 1. 網頁基本設定 (設定為寬版模式)
+# 1. 網頁基本設定
 st.set_page_config(page_title="第10組 ICU 臨床單床監護儀", page_icon="🏥", layout="wide")
 
-# =================【前端 JavaScript 實時點擊驅動器】=================
-# 每 3 秒強迫瀏覽器向後端發送 Rerun 訊號，確保全網頁與資料庫同步刷新
+# 前端 5 秒自動刷新
 st.components.v1.html(
     """
     <script>
         const interval = setInterval(function() {
             const windowParent = window.parent;
-            if (windowParent) {
-                windowParent.postMessage({type: 'streamlit:rerun'}, '*');
-            }
-        }, 3000); // 3000 毫秒 = 3 秒
+            if (windowParent) { windowParent.postMessage({type: 'streamlit:rerun'}, '*'); }
+        }, 5000);
     </script>
     """,
     height=0,
 )
-# =========================================================================
 
 st.logo("🏥")
 
-# 2. 全域 CSS 樣式面板優化 (包含危急警報閃爍動畫)
+# 2. 全域 CSS
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #06090E;
-        color: #E2E8F0;
-    }
-    .monitor-panel {
-        background-color: #0F131A;
-        border: 2px solid #1E293B;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-        margin-bottom: 20px;
-    }
-    .status-stable { border-top: 8px solid #10B981 !important; }
-    .status-warning { border-top: 8px solid #F59E0B !important; }
-    .status-critical {
-        border-top: 8px solid #EF4444 !important;
-        animation: card-blink 1s infinite alternate;
-    }
-    @keyframes card-blink {
-        0% { border-top-color: #EF4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
-        100% { border-top-color: #7F1D1D; box-shadow: 0 0 30px rgba(239, 68, 68, 0.7); }
-    }
-    .vital-card {
-        background-color: #06090E; 
-        padding: 20px; 
-        border-radius: 8px; 
-        border: 1px solid #1E293B; 
-        text-align: center;
-    }
-    .vital-value {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 52px;
-        font-weight: bold;
-        line-height: 1.1;
-        margin-top: 10px;
-    }
-    .text-bpm { color: #10B981; }
-    .text-spo2 { color: #38BDF8; }
-    .text-bp { color: #ECC94B; }
-    .text-alert { color: #F87171; font-weight: 900; }
-    .text-gray { color: #64748B; }
+    .stApp { background-color: #06090E; color: #E2E8F0; }
+    .monitor-panel { background-color: #0F131A; border: 2px solid #1E293B; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-top: 8px solid #10B981; }
+    .vital-card { background-color: #06090E; padding: 15px; border-radius: 8px; border: 1px solid #1E293B; text-align: center; height: 140px; }
+    .vital-value { font-family: 'Courier New', Courier, monospace; font-weight: bold; line-height: 1.1; margin-top: 5px; font-size: 42px; }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. 頂部中央監控台標頭
+# 3. 標頭
 st.markdown(f"""
-    <div style="background-color: #0F131A; padding: 15px 25px; border-radius: 8px; border: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div style="background-color: #0F131A; padding: 15px 25px; border-radius: 8px; border: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <div>
-            <h1 style="color: #38BDF8; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1px;">🏥 CLINICAL PATIENT MONITOR</h1>
-            <p style="color: #64748B; margin: 3px 0 0 0; font-size: 13px;">第 10 組 醫療數據中央監控台 | 實時數據接收端 (Active)</p>
+            <h1 style="color: #38BDF8; margin: 0; font-size: 24px; font-weight: 800;">🏥 CLINICAL PATIENT MONITOR</h1>
+            <p style="color: #64748B; margin: 3px 0 0 0; font-size: 12px;">第 10 組 醫療數據中央監控台</p>
         </div>
         <div style="text-align: right;">
-            <span style="background-color: #1E293B; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #34D399; font-weight: bold;">● LIVE LINK</span>
-            <p style="color: #94A3B8; margin: 5px 0 0 0; font-size: 11px; font-family: monospace;">最後同步: {datetime.now().strftime('%H:%M:%S')}</p>
+            <p style="color: #94A3B8; margin: 0; font-size: 12px; font-family: monospace;">網頁刷新時間: {datetime.now().strftime('%H:%M:%S')}</p>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
-# 4. 資料獲取與解析 (強力摧毀 Google Sheets 的快取機制)
-# 4. 資料獲取與解析 (升級防錯版：自動過濾多餘參數)
-# 4. 資料獲取與解析 (診斷噴錯版：直接揪出卡在第幾行)
+# 4. 資料獲取（加入極端偵錯模式）
 sheet_url = "https://docs.google.com/spreadsheets/d/1pg-uFGYgdBANJOnRxqiRo64IhgYH4FDuZPlmOFYFHpU/edit?hl=zh-tw&gid=0#gid=0"
+debug_msg = "正常連線"
+error_detail = ""
 
 try:
-    # 1. 確保網址切得乾淨
     base_url = sheet_url.split('/edit')[0]
     csv_url = f"{base_url}/export?format=csv"
+    cache_buster = f"&nocache={time.time()}&rand={random.randint(10000, 99999)}"
     
-    # 2. 讀取 CSV
-    df = pd.read_csv(f"{csv_url}&nocache={time.time()}")
+    # 讀取 CSV
+    df = pd.read_csv(csv_url + cache_buster)
     
-    # 3. 解析最新一筆資料
+    # 強制轉型
+    df['Systolic'] = pd.to_numeric(df['Systolic'], errors='coerce').fillna(120).astype(int)
+    df['Diastolic'] = pd.to_numeric(df['Diastolic'], errors='coerce').fillna(80).astype(int)
+    df['SpO2'] = pd.to_numeric(df['SpO2'], errors='coerce').fillna(98.0).astype(float)
+    df['HeartRate'] = pd.to_numeric(df['HeartRate'], errors='coerce').fillna(75).astype(int)
+    df['Alert'] = df['Alert'].astype(str).str.strip()
+    
+    # 抓取最新一筆
     latest_row = df.iloc[-1]
     current_sys = int(latest_row['Systolic'])
     current_dia = int(latest_row['Diastolic'])
     current_spo2 = float(latest_row['SpO2'])
     current_hr = int(latest_row['HeartRate'])
-    colab_alert = str(latest_row['Alert']).strip()
-
-    # 4. 時間與圖表轉換
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-    df['TimeStr'] = df['Timestamp'].dt.strftime('%H:%M:%S')
-    chart_data = df.set_index('TimeStr')[['Systolic', 'Diastolic', 'SpO2', 'HeartRate']]
-    error_mode = False
+    colab_alert = str(latest_row['Alert'])
     
+    chart_data = df[['Systolic', 'Diastolic', 'SpO2', 'HeartRate']]
 except Exception as e:
-    error_mode = True
+    debug_msg = "❌ 讀取發生錯誤"
+    error_detail = str(e)
     current_sys, current_dia, current_spo2, current_hr = 0, 0, 0, 0
-    colab_alert = "DISCONNECTED"
+    colab_alert = "ERROR"
     chart_data = pd.DataFrame()
-    
-    # 【除錯大絕招】：在網頁上直接印出為什麼沒畫面
-    st.error(f"💥 網頁沒畫面的真正原因： {str(e)}")
+
+# 5. 渲染主要面板
+st.markdown(f"""
+    <div class="monitor-panel">
+        <span style="font-size: 20px; font-weight: 800; color: #FFF;">🛏️ TARGET LOCATION: BED-001</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# 6. 三欄數據卡
+m1, m2, m3 = st.columns(3)
+with m1:
+    st.markdown(f'<div class="vital-card"><div style="color:#64748B;">NIBP</div><div class="vital-value" style="color:#ECC94B;">{current_sys}/{current_dia}</div></div>', unsafe_allow_html=True)
+with m2:
+    st.markdown(f'<div class="vital-card"><div style="color:#64748B;">SpO2</div><div class="vital-value" style="color:#38BDF8;">{current_spo2:.1f}%</div></div>', unsafe_allow_html=True)
+with m3:
+    st.markdown(f'<div class="vital-card"><div style="color:#64748B;">HR</div><div class="vital-value" style="color:#10B981;">{current_hr} BPM</div></div>', unsafe_allow_html=True)
+
+# 7. 圖表
+st.markdown("<br>", unsafe_allow_html=True)
+if not chart_data.empty:
+    st.line_chart(chart_data.tail(30), height=250)
+
+# =========================================================================
+# 🛠️ 【第 10 組專用：極端後台數據抓漏面板】
+# =========================================================================
+st.markdown("---")
+st.subheader("🛠️ 後台連線抓漏實時狀態 (上台前請刪除此區塊)")
+
+col_a, col_b = st.columns(2)
+with col_a:
+    st.metric("目前雲端資料庫「總資料筆數」", len(chart_data) if not chart_data.empty else 0)
+    st.text(f"連線診斷狀態: {debug_msg}")
+    if error_detail:
+        st.error(f"Python 報錯原因: {error_detail}")
+
+with col_b:
+    st.write("▼ 目前 Python 真正從網路上抓到的最後 3 筆資料（對照 Google 用）：")
+    if not chart_data.empty:
+        st.dataframe(df.tail(3)[['Timestamp', 'Systolic', 'Diastolic', 'SpO2', 'HeartRate', 'Alert']])
+    else:
+        st.warning("完全抓不到任何資料，請檢查 Google 試算表是否已被意外關閉『發布到網路』！")
