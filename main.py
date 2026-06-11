@@ -88,16 +88,18 @@ st.markdown(f"""
 
 # 4. 資料獲取與解析 (強力摧毀 Google Sheets 的快取機制)
 # 4. 資料獲取與解析 (升級防錯版：自動過濾多餘參數)
+# 4. 資料獲取與解析 (診斷噴錯版：直接揪出卡在第幾行)
 sheet_url = "https://docs.google.com/spreadsheets/d/1pg-uFGYgdBANJOnRxqiRo64IhgYH4FDuZPlmOFYFHpU/edit?hl=zh-tw&gid=0#gid=0"
 
 try:
-    # 這裡做了升級：先精準切出 /d/ 這一串試算表 ID，再重新乾淨地拼上 export 網址
+    # 1. 確保網址切得乾淨
     base_url = sheet_url.split('/edit')[0]
     csv_url = f"{base_url}/export?format=csv"
     
-    # 網址後面強行加上亂數時間戳記，繞過 Google Sheets 伺服器端暫存限制
+    # 2. 讀取 CSV
     df = pd.read_csv(f"{csv_url}&nocache={time.time()}")
     
+    # 3. 解析最新一筆資料
     latest_row = df.iloc[-1]
     current_sys = int(latest_row['Systolic'])
     current_dia = int(latest_row['Diastolic'])
@@ -105,13 +107,17 @@ try:
     current_hr = int(latest_row['HeartRate'])
     colab_alert = str(latest_row['Alert']).strip()
 
+    # 4. 時間與圖表轉換
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-    # 將時間索引轉換成字串格式 (時:分:秒)，確保折線圖 X 軸能精準實時推移
     df['TimeStr'] = df['Timestamp'].dt.strftime('%H:%M:%S')
     chart_data = df.set_index('TimeStr')[['Systolic', 'Diastolic', 'SpO2', 'HeartRate']]
     error_mode = False
+    
 except Exception as e:
     error_mode = True
     current_sys, current_dia, current_spo2, current_hr = 0, 0, 0, 0
     colab_alert = "DISCONNECTED"
     chart_data = pd.DataFrame()
+    
+    # 【除錯大絕招】：在網頁上直接印出為什麼沒畫面
+    st.error(f"💥 網頁沒畫面的真正原因： {str(e)}")
